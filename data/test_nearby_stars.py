@@ -16,6 +16,11 @@ def planet(name="GJ 15 A b", host="GJ 15 A", **kwargs):
 
 
 class CatalogTests(unittest.TestCase):
+    def test_metadata_filenames_do_not_expose_local_directories(self):
+        path = Path("/home/private-user/projects/catalog/host_aliases.csv")
+        self.assertEqual(n.metadata_filename(path), "host_aliases.csv")
+        self.assertIsNone(n.metadata_filename(None))
+
     def test_heliocentric_cartesian_coordinates(self):
         sol = star(dist="0", proper="Sol", x="0.000005", y="0", z="0")
         self.assertEqual(n.cartesian(sol, n.PC_TO_LY), dict(x=0, y=0, z=0))

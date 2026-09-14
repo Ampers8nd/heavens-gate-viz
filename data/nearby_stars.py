@@ -54,6 +54,11 @@ AUDIT_COLUMNS = [
 ]
 
 
+def metadata_filename(path):
+    """Return a portable source label without exposing a local directory."""
+    return Path(path).name if path else None
+
+
 def number(value):
     try:
         result = float(value)
@@ -407,7 +412,14 @@ def main(argv=None):
             if entry["status"] == "matched_selected" and entry["notes"]:
                 warnings[entry["hyg_id"]].append(f"{entry['nasa_host']}: {entry['notes']}")
         for summary in summaries:
-            summary["notes"] = " ".join(filter(None, [summary["notes"], *warnings[summary["hyg_id"]]]))
+            notes = summary["notes"]
+            for warning in warnings[summary["hyg_id"]]:
+                repeated = f"{warning} {warning}"
+                while repeated in notes:
+                    notes = notes.replace(repeated, warning)
+                if warning not in notes:
+                    notes = " ".join(filter(None, (notes, warning)))
+            summary["notes"] = notes
         review = [r for r in audit if r["status"] in {"unmatched_nearby", "ambiguous_identifier"}
                   or (r["status"] == "matched_outside_radius" and r["nasa_distance_ly"] != ""
                       and r["nasa_distance_ly"] <= args.radius_ly)
@@ -416,14 +428,14 @@ def main(argv=None):
             "radius_ly": args.radius_ly, "parsec_to_light_year": PC_TO_LY,
             "hyg_file": args.hyg.name, "hyg_sha256": hashlib.sha256(args.hyg.read_bytes()).hexdigest(),
             "nasa_file": args.planets.name, "nasa_sha256": hashlib.sha256(args.planets.read_bytes()).hexdigest(),
-            "aliases_file": str(alias_path) if alias_path else None,
+            "aliases_file": metadata_filename(alias_path),
             "aliases_sha256": hashlib.sha256(alias_path.read_bytes()).hexdigest() if alias_path else None,
             "input_hyg_entries": len(stars), "input_nasa_rows": len(raw), "unique_archive_planets": len(chosen),
             "selected_hyg_entries": len(summaries), "matched_exoplanet_hosts": len({p['hyg_id'] for p in planets}),
             "matched_confirmed_exoplanets": len(planets), "review_rows": len(review),
             "include_sol": not args.exclude_sol, "review_arcsec": args.review_arcsec,
             "coordinate_frame": "Sol-centered J2000 equatorial; +X vernal equinox, +Y RA 6h, +Z north celestial pole",
-            "campaign_source": str(campaign_source) if campaign_source else None,
+            "campaign_source": metadata_filename(campaign_source),
         }
         instructions = [
             ("Faction ownership", OWNERSHIP_HELP),

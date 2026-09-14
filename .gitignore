@@ -4,3 +4,5 @@ __pycache__/
 *:Zone.Identifier
 node_modules/
 game-visual/dist/
+data/output/**/summary.json
+data/output/**/nearby_stars.before-campaign.xlsx

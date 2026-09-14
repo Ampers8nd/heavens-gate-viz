@@ -29,6 +29,10 @@ Change `--radius-ly` to build another local volume. The pipeline assigns confirm
 NASA Archive planets to HYG hosts, writes Sol-centered Cartesian coordinates, and
 creates editable Excel and CSV outputs. Details are in [data/README.md](data/README.md).
 
+Generated public metadata records source filenames and hashes without storing local
+directory paths. Per-run `summary.json` files and automatic pre-migration workbook
+backups stay local through `.gitignore`; neither is required by either visualizer.
+
 ## Limitations and AI disclosure
 
 OpenAI Codex (w/ Astra & 5.6 Sol) generated a large portion of this repository's code. Catalog names can

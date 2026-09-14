@@ -18,6 +18,10 @@ The adjustable radius is inclusive and measured from Sol using HYG distances.
 Output is written under `data/output/nearby_30ly/`; change the radius or pass
 `--output-dir` for another volume. `--csv-only` skips Excel output.
 
+Metadata contains portable source filenames and hashes, never absolute local paths.
+`summary.json` and `nearby_stars.before-campaign.xlsx` are local artifacts excluded
+from Git; the spreadsheet and browser map do not depend on them.
+
 The main workbook is
 [`output/nearby_30ly/nearby_stars.xlsx`](output/nearby_30ly/nearby_stars.xlsx):
 
