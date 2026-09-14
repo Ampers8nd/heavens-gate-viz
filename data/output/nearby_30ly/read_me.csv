@@ -1,0 +1,37 @@
+﻿topic,description
+Faction ownership,"Factions: define faction_id, faction_name, #RRGGBB color and notes. Stars/Planets faction_owners: semicolon-separated IDs, e.g. union; league. Blank means no recorded ownership. Stars sharing system_id share the union of their star-level claims. Planet owners are independent and never inherited. system_id defaults to the HYG primary and can be edited to group components. These are fictional campaign annotations, not astronomical data. Regeneration preserves campaign fields and user count/notes edits from the existing output workbook, or from --campaign-from when specified."
+Editing,Stars: yellow planet_count_override accepts a count; leave blank to count Planets. Yellow notes cells are free text. Planets: include_in_count=0 excludes a row. Formulas update in Excel/LibreOffice.
+Planet status,Yes means at least one counted planet. Unknown means no confirmed exoplanet was matched in these files. Explicit count override 0 displays No (your assertion). archive_planet_count preserves the original matched count.
+Counts,"Count distinct pl_name values, not publication rows or sy_pnum (which is system-wide). Controversial archive members remain included and flagged. Sol has 8 known planets but 0 exoplanets; Solar System orbital data are not supplied."
+Naming,"Preserve NASA scientific designations exactly. Host + existing lowercase planet letter; letters reflect discovery order, not orbital distance. Uppercase stellar components remain distinct. HYG proper names are display labels, not newly assigned IAU names."
+Selection,"HYG distance in parsecs controls the inclusive radius cut; missing/nonfinite/negative/sentinel distances are excluded. HYG is not a complete census and can contain duplicates. Rows are HYG entries, not deduplicated physical stars."
+Cartesian coordinates,"Stars includes x_ly/y_ly/z_ly in light-years and x_pc/y_pc/z_pc in parsecs. These are HYG heliocentric J2000 equatorial coordinates: +X toward the vernal equinox, +Y toward RA 6 hours, +Z toward the north celestial pole. Sol is pinned to exactly (0,0,0); other HYG positions are preserved."
+Matching,"Exact normalized catalog, Bayer, Flamsteed, variable or proper name, then explicit verified aliases. Never assign by angular proximity alone; Review lists candidates. Matches outside the radius are retained in Host matches."
+Distance checks,NASA and HYG distances can differ substantially; >20% differences are flagged. Angular separations are diagnostic only: epochs/proper motion can differ. No positions are propagated.
+Measurements,"Planets uses one default NASA row per planet. If absent, latest row is used and flagged. No values are filled from other publications. Measurements retains all published rows, errors, limits and references for matched planets; used_in_planets=1 marks chosen rows."
+Habitability,"Semi-major axis is orbital size, not instantaneous separation. Published flux and equilibrium temperature are indicators, not habitability verdicts; equilibrium temperature is not surface temperature. Mass may be M sin(i), indicated by mass_provenance. Blank means unavailable. See Measurements for uncertainty and limit flags."
+Luminosity,"HYG luminosity is supplied as-is; no bolometric correction or habitable-zone calculation is attempted. Age, atmosphere, rotation and activity are not reliably available in this export."
+Limits,"NASA parameter lim: 0 = measured value, 1 = upper limit, -1 = lower limit. Nonzero limits are called out in Planets notes; err1/err2 are upper/lower uncertainties in Measurements."
+Regeneration,"Campaign fields, notes, count overrides and planet inclusion flags are preserved from the existing workbook or --campaign-from. Other values are regenerated; save additional edits separately. planet_names is an archive snapshot. CSV files are independent snapshots."
+HYG source,"David Nash, HYG database, CC BY-SA 4.0: https://www.astronexus.com/projects/hyg ; field documentation: https://github.com/astronexus/HYG-Database/blob/main/hyg/README.md"
+NASA source,NASA Exoplanet Archive (NASA Exoplanet Science Institute / Caltech): https://exoplanetarchive.ipac.caltech.edu/docs/API_PS_columns.html
+Naming source,https://iauarchive.eso.org/public/themes/naming_exoplanets/
+radius_ly,30.0
+parsec_to_light_year,3.2615637771674333
+hyg_file,hygdata_v42.csv.gz
+hyg_sha256,5ca9431ff364c8002a4a3efa91b2b9296746aea1543374db4cb6b4fab049d601
+nasa_file,PS_2026.09.14_10.00.43.csv
+nasa_sha256,22ce4236753935feb4d289ffa1ab8959ccf46edce72d310de950e39575c24432
+aliases_file,host_aliases.csv
+aliases_sha256,70328030a691b9b21dcadccb9fd6198f158772fac4569e20fb0aab1f282a83dd
+input_hyg_entries,119626
+input_nasa_rows,40155
+unique_archive_planets,6366
+selected_hyg_entries,270
+matched_exoplanet_hosts,51
+matched_confirmed_exoplanets,101
+review_rows,6
+include_sol,True
+review_arcsec,180
+coordinate_frame,"Sol-centered J2000 equatorial; +X vernal equinox, +Y RA 6h, +Z north celestial pole"
+campaign_source,nearby_stars.xlsx
