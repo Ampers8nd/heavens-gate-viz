@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { thickness } from 'three/src/nodes/core/PropertyNode.js';
 
 export class StarMap {
   constructor(viewport, onSelect) {
@@ -24,6 +25,12 @@ export class StarMap {
       this.animation = null;
     });
     this.canvas.addEventListener('wheel', () => { this.animation = null; }, { passive: true });
+    this.canvas.addEventListener('dblclick', event => {
+      if (event.buttons) return;
+      const nearest = this.pick(event);
+      if (this.hovered !== nearest?.star.id) {this.hovered = nearest?.star.id ?? null}
+      if (this.hovered !== null) {this.focus(this.hovered)}
+    })
     this.canvas.addEventListener('pointermove', event => {
       if (event.buttons) return;
       const nearest = this.pick(event);
