@@ -1,0 +1,7 @@
+﻿nasa_host,planet_count,status,hyg_id,hyg_name,hyg_distance_ly,nasa_distance_ly,method,evidence,angular_separation_arcsec,distance_difference_percent,candidate_hyg_ids,notes
+GJ 273,2,matched_selected,36107,Luyten's Star,12.402422419056881,19.31346406122916,catalog identifier,GJ 273,0.09778996232322368,55.72332088570979,,Catalog distances differ by >20%; HYG controls selection.
+GJ 411,2,matched_selected,53879,Lalande 21185,8.306876784067736,18.511895624224934,catalog identifier,GJ 411,8.784039138133545,122.85024932270605,,Catalog distances differ by >20%; HYG controls selection.
+Gl 725 B,1,matched_selected,91487,Struve 2398 B,11.267072068224898,22.316783741648027,catalog identifier,Gl 725 B,6.203693605556295,98.07083514256766,,Catalog distances differ by >20%; HYG controls selection.
+LTT 1445 A,2,unmatched_nearby,,,,22.40462743885848,unassigned,LTT 1445 A,,,118187; 119616,Position candidates require review; component identity is preserved.
+RR Cae,1,matched_selected,118293,GJ 2034,26.51683966474895,69.11775494022139,verified alias,GJ 2034; https://simbad.u-strasbg.fr/simbad/sim-basic?Ident=rr+cae&submit=SIMBAD+search; Unresolved binary system entry; HYG distance differs substantially from NASA,49.78179982440189,160.65608049101488,,Catalog distances differ by >20%; HYG controls selection.
+Teegarden's Star,3,unmatched_nearby,,,,12.49433328629746,unassigned,Teegarden's Star,,,,Position candidates require review; component identity is preserved.

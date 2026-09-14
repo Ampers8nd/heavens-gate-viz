@@ -1,0 +1,7 @@
+nasa_hostname,hyg_identifier,source,notes
+Proxima Cen,HIP 70890,https://simbad.u-strasbg.fr/simbad/sim-id?Ident=Proxima+Centauri,Abbreviated constellation in NASA host name
+Kapteyn,Gl 191,https://simbad.u-strasbg.fr/simbad/sim-basic?Ident=Kapteyn%27s+&submit=SIMBAD+search,Kapteyn's Star in HYG
+eps Ind A,HD 209100,https://doi.org/10.3847/1538-4365/ae633d,Explicit primary component; do not strip component letters generally
+GJ 9066,Gl 83.1,https://simbad.u-strasbg.fr/simbad/sim-id?Ident=GJ83.1,Alternate Gliese designation for TZ Ari
+CD Cet,GJ 1057,https://www.aanda.org/articles/aa/pdf/2020/08/aa38031-20.pdf,Variable-star designation absent in HYG
+RR Cae,GJ 2034,https://simbad.u-strasbg.fr/simbad/sim-basic?Ident=rr+cae&submit=SIMBAD+search,Unresolved binary system entry; HYG distance differs substantially from NASA

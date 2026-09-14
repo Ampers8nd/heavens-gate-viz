@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Heaven's Gate · Solar neighborhood</title>
+<style>
+:root{color-scheme:dark;font-family:Inter,system-ui,-apple-system,sans-serif;color:#dbe7f2;background:#080f1c}
+*{box-sizing:border-box}body{margin:0}button,input{font:inherit}button{cursor:pointer}
+.app{height:100vh;min-height:600px;display:grid;grid-template-columns:310px 1fr}
+aside{background:#0b1422;border-right:1px solid #203044;padding:28px 24px;overflow:auto;z-index:2}
+.eyebrow{font-size:10px;font-weight:650;letter-spacing:2px;color:#7492ac;text-transform:uppercase}
+h1{font-size:25px;line-height:1.18;letter-spacing:-.7px;margin:12px 0}h2{font-size:22px;margin:10px 0;overflow-wrap:anywhere}
+p{font-size:12px;line-height:1.7;color:#92a9bf}.stats{display:flex;gap:28px;margin:22px 0 26px}.stat strong{font-size:24px;font-weight:500;display:block}.stat span{font-size:10px;color:#829bb1}
+label{display:block;font-size:11px;color:#92a9bf;margin-bottom:8px}
+input{width:100%;border:1px solid #294158;background:#111e2e;color:#e7f0fa;padding:11px 12px;border-radius:6px;outline:none}input:focus{border-color:#64cfc6}
+#search-results{display:flex;flex-direction:column;gap:4px;margin-top:7px}#search-results:empty{display:none}
+.result{padding:9px 10px;text-align:left;border:1px solid #21374b;border-radius:4px;background:#142234;color:#dbe7f2;font-size:12px}.result small{float:right;color:#7993aa}
+.legend{display:flex;gap:12px;flex-wrap:wrap;margin:22px 0;font-size:10px;color:#9eb3c7}.dot{display:inline-block;width:6px;height:6px;border-radius:100%;margin:0 5px 1px 0;background:#97aabe}.dot.host{background:#67ded6}.dot.sun{background:#ffd477;width:9px;height:9px}
+.detail{border-top:1px solid #253449;padding-top:22px;margin-top:23px}.tag{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#6fe0d5}
+dl{margin:18px 0}dl div{display:flex;justify-content:space-between;gap:15px;padding:8px 0;border-bottom:1px solid #172638;font-size:11px}dt{color:#88a1b8}dd{margin:0;text-align:right;color:#d5e5f3;font-variant-numeric:tabular-nums}
+.muted{color:#718ba3;font-size:10px}.planet-list{white-space:pre-line;overflow-wrap:anywhere;font-size:12px;line-height:1.7;color:#bdd0e0}.notes{color:#b5a68b;font-size:11px}.small-title{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#718ba3;margin-top:20px}
+main{position:relative;min-width:0;overflow:hidden}#plot-wrap{position:absolute;inset:0}.plotly-graph-div{width:100%;height:100%}
+.topline{position:absolute;left:30px;right:25px;top:26px;display:flex;justify-content:space-between;gap:10px;pointer-events:none;z-index:1}.topline span{font-size:10px;color:#70889f;letter-spacing:1.2px;text-transform:uppercase}
+.tools{position:absolute;right:24px;bottom:25px;display:flex;gap:8px}.tools button,#home{border:1px solid #304258;background:#101e2ded;color:#bfd0e1;border-radius:5px;padding:10px 13px;font-size:11px}.tools button:hover,#home:hover{background:#1b3045;color:white}
+.help{position:absolute;bottom:28px;left:28px;font-size:10px;color:#71889e;line-height:1.8;pointer-events:none;max-width:55%}
+#sol-beacon{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:1;pointer-events:none;display:flex;flex-direction:column;align-items:center}
+#sol-beacon i{display:block;width:13px;height:13px;border-radius:50%;background:#ffe1a0;box-shadow:0 0 10px #ffd47799,0 0 28px #ffd47745}
+#sol-beacon b{position:absolute;top:-26px;font-size:12px;letter-spacing:2px;color:#ffdf93;text-shadow:0 1px 6px #000}
+#status{position:absolute;left:28px;top:53px;font-size:10px;color:#83a4bb;pointer-events:none}.error{color:#ffd477!important}
+@media(max-width:800px){.app{grid-template-columns:230px 1fr}aside{padding:22px 16px}.topline{left:18px}.topline span:last-child{display:none}.help{left:15px;bottom:72px;max-width:85%}.tools{right:12px}.stats{gap:20px}}
+@media(max-width:550px){.app{display:flex;flex-direction:column;height:auto;min-height:100vh}aside{order:2;border-right:0;padding:20px}main{height:65vh;min-height:420px;order:1}.detail{margin-top:15px}.stats{margin:14px 0}.legend{margin:14px 0}}
+</style>
+</head>
+<body>
+<div class="app">
+<aside>
+ <div class="eyebrow">Heaven's Gate / Stellar atlas</div>
+ <h1>The solar<br>neighborhood.</h1>
+ <p>A three-dimensional view of our nearby stars, measured from Sol.</p>
+ <div class="stats"><div class="stat"><strong id="star-total">—</strong><span>catalog entries</span></div><div class="stat"><strong id="host-total">—</strong><span>exoplanet hosts*</span></div></div>
+ <label for="search">Find a star or catalog designation</label>
+ <input id="search" placeholder="Proxima, Sirius, HIP…" autocomplete="off" type="search">
+ <div id="search-results" aria-live="polite"></div>
+ <div class="legend"><span><i class="dot host"></i>With planets</span><span><i class="dot"></i>No matched planets</span><span><i class="dot sun"></i>Sol</span></div>
+ <section class="detail" aria-live="polite">
+  <div class="tag" id="kind">Our reference star</div><h2 id="star-name">Sol</h2>
+  <p id="aliases"></p>
+  <dl><div><dt>Distance from Sol</dt><dd id="distance">0.00 ly</dd></div><div><dt>Planet count*</dt><dd id="planets">8</dd></div><div><dt>Spectral type</dt><dd id="spectrum">G2V</dd></div><div><dt>X / Y / Z (ly)</dt><dd id="coords">0 / 0 / 0</dd></div></dl>
+  <div class="small-title">Catalog planet names</div><div class="planet-list" id="planet-names"></div>
+  <p id="notes" class="notes"></p>
+ </section>
+ <p class="muted">*Counts reflect spreadsheet edits. No matched planets does not mean a star has none. Planet names retain the catalog snapshot.</p>
+ <p class="muted" id="source"></p>
+</aside>
+<main>
+ <div id="plot-wrap"><!-- PLOT --></div>
+ <div class="topline"><span>Heliocentric / J2000</span><span id="range"></span></div>
+ <div id="status" role="status">Loading star field…</div>
+ <div id="sol-beacon" aria-label="Sol, at the origin"><b>SOL</b><i></i></div>
+ <div class="help">Drag to orbit · Scroll or pinch to zoom · Click a star for details<br>Rings: 10 ly apart · Marker sizes emphasize visibility, not stellar radius</div>
+ <div class="tools"><button id="zoom-in" title="Zoom in" aria-label="Zoom in">＋</button><button id="zoom-out" title="Zoom out" aria-label="Zoom out">−</button><button id="reset">Reset view</button><button id="home">Select Sol</button></div>
+</main>
+</div>
+<!-- STAR_DATA -->
+<script>
+(() => {
+ const payload=JSON.parse(document.getElementById('star-data').textContent);
+ const stars=payload.stars, byId=new Map(stars.map(s=>[s.id,s]));
+ const sun=stars.find(s=>s.sol), field=stars.filter(s=>!s.sol), plot=document.getElementById('star-map');
+ const initial={eye:{x:1.5,y:1.5,z:1.1},center:{x:0,y:0,z:0},up:{x:0,y:0,z:1}};
+ const initialDistance=Math.hypot(...Object.values(initial.eye));
+ let camera=structuredClone(initial), selected=sun.id, ready=false, timer=null, labelKey='';
+ const text=(id,value)=>{document.getElementById(id).textContent=value;};
+ const escape=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+ text('star-total',stars.filter(s=>!s.reference_only).length);
+ text('host-total',field.filter(s=>s.planet_count>0).length);
+ text('source',`Source: ${payload.source}. Positions are in light-years; HYG catalog entries may include unresolved systems or duplicates.`);
+ text('range',`Out to ${Math.max(...stars.map(s=>s.distance)).toFixed(1)} light-years`);
+ function details(s){
+  text('kind',s.sol?'Our reference star':s.planet_count>0?'Planet-hosting entry':'Stellar catalog entry');
+  text('star-name',s.name);text('aliases',s.aliases);text('distance',`${s.distance.toFixed(2)} ly`);
+  text('planets',`${s.planet_count}${s.count_edited?' · edited':''}`);
+  text('spectrum',s.spectral_type||'Not provided');text('coords',[s.x,s.y,s.z].map(v=>v.toFixed(2)).join(' / '));
+  text('planet-names',s.planet_names?s.planet_names.split(';').map(p=>p.trim()).join('\n'):'No names provided');
+  text('notes',s.notes);
+ }
+ async function select(id){
+  const s=byId.get(String(id));if(!s)return;
+  selected=s.id;details(s);
+  if(ready){await Plotly.restyle(plot,{x:[s.sol?[]:[s.x]],y:[s.sol?[]:[s.y]],z:[s.sol?[]:[s.z]],
+   text:[s.sol?[]:[escape(s.name)]],customdata:[s.sol?[]:[s.id]]},[2]);await updateLabels();}
+ }
+ // Camera stays aimed at the origin: Sol's overlay cannot be occluded by another point.
+ async function setCamera(next){
+  camera={...next,center:{x:0,y:0,z:0}};
+  const d=Math.hypot(camera.eye.x,camera.eye.y,camera.eye.z),clamped=Math.min(8,Math.max(.16,d));
+  if(d>0)for(const a of ['x','y','z'])camera.eye[a]*=clamped/d;
+  await Plotly.relayout(plot,{'scene.camera':camera});
+  await updateLabels();
+ }
+ async function updateLabels(){
+  const d=Math.hypot(camera.eye.x,camera.eye.y,camera.eye.z),zoom=initialDistance/d;
+  let nearby=[];
+  if(zoom>1.3){
+   const eye=[camera.eye.x,camera.eye.y,camera.eye.z];
+   const direction=eye.map(v=>-v/d);
+   // Plotly's cube coordinates run from -0.5 to 0.5 for equal data ranges.
+   nearby=field.filter(s=>s.id!==selected).map(s=>{
+    const v=[s.x,s.y,s.z].map((v,i)=>v/(2*payload.extent)-eye[i]);
+    const depth=v.reduce((sum,v,i)=>sum+v*direction[i],0);
+    const length=Math.hypot(...v),cos=depth/length;
+    return {s,depth,length,cos};
+   }).filter(p=>p.depth>0&&p.cos>.88).sort((a,b)=>a.length-b.length)
+     .slice(0,Math.min(12,Math.floor((zoom-1.3)*8)+1)).map(p=>p.s.id);
+  }
+  const key=selected+'|'+nearby.join('|');
+  if(key!==labelKey){labelKey=key;const ids=new Set(nearby);
+   await Plotly.restyle(plot,{text:[field.map(s=>ids.has(s.id)?escape(s.name):'')]},[0]);
+   const labeled=[...nearby];if(selected!==sun.id)labeled.push(selected);
+   await Plotly.relayout(plot,{'scene.annotations':labeled.map(id=>{const s=byId.get(id);return {
+    x:s.x,y:s.y,z:s.z,text:escape(s.name),showarrow:false,xshift:8,yshift:15,
+    font:{size:id===selected?15:12,color:id===selected?'#ffffff':'#bfd4e7'},
+    bgcolor:'rgba(8,15,28,0.82)',borderpad:3,xanchor:'left'};})});
+  }
+  text('status',`${zoom.toFixed(1)}× view · ${nearby.length} nearby labels · Sol fixed at origin`);
+ }
+ function cameraChanged(event){
+  if(!Object.keys(event).some(k=>k.startsWith('scene.camera')))return;
+  camera=structuredClone(plot.layout.scene.camera);
+  clearTimeout(timer);timer=setTimeout(async()=>{
+   const c=camera.center||{};
+   if(Math.hypot(c.x||0,c.y||0,c.z||0)>1e-8){await setCamera(camera);}
+   else await updateLabels();
+  },90);
+ }
+ function initialize(){
+  if(ready||!plot||!plot.on)return;ready=true;
+  let hovered=null,press=null;
+  plot.on('plotly_hover',event=>{
+   const p=event.points?.find(p=>p.curveNumber<3);
+   hovered=p?(p.customdata??p.data.customdata?.[p.pointNumber]):null;
+  });
+  plot.on('plotly_unhover',()=>{hovered=null;});
+  plot.on('plotly_click',event=>{
+   const p=event.points?.find(p=>p.curveNumber<3);
+   if(p)select(p.customdata??p.data.customdata?.[p.pointNumber]);
+  });
+  // WebGL picking can miss a very short press between animation frames. Use the
+  // renderer's hovered ID as a fallback for stationary clicks, never for drags.
+  plot.addEventListener('pointerdown',event=>{
+   press=event.isPrimary&&event.button===0?{x:event.clientX,y:event.clientY}:null;
+  },true);
+  plot.addEventListener('pointerup',event=>{
+   const start=press;press=null;
+   if(start&&Math.hypot(event.clientX-start.x,event.clientY-start.y)<5){
+    setTimeout(()=>{if(hovered!==null&&String(hovered)!==selected)select(hovered);},70);
+   }
+  },true);
+  plot.addEventListener('pointercancel',()=>{press=null;},true);
+  plot.on('plotly_relayout',cameraChanged);
+  // Sol is always represented by the bright overlay, even if depth testing hides its WebGL marker.
+  plot.on('plotly_webglcontextlost',()=>{text('status','3D graphics unavailable. Enable WebGL and reload; star search remains available.');document.getElementById('status').classList.add('error');});
+  updateLabels();window.starViewerReady=true;
+ }
+ document.getElementById('home').onclick=()=>select(sun.id);
+ document.getElementById('reset').onclick=async()=>{if(ready){await setCamera(structuredClone(initial));await select(sun.id);}};
+ for(const [id,factor]of [['zoom-in',.75],['zoom-out',1/.75]])document.getElementById(id).onclick=()=>{
+  if(!ready)return;const next=structuredClone(camera);for(const a of ['x','y','z'])next.eye[a]*=factor;setCamera(next);
+ };
+ const search=document.getElementById('search'),results=document.getElementById('search-results');
+ search.oninput=()=>{
+  results.replaceChildren();const query=search.value.trim().toLowerCase();if(!query)return;
+  const found=stars.filter(s=>`${s.name} ${s.aliases} HYG ${s.id}`.toLowerCase().includes(query)).slice(0,8);
+  for(const s of found){const b=document.createElement('button');b.className='result';b.textContent=s.name;
+   const distance=document.createElement('small');distance.textContent=`${s.distance.toFixed(1)} ly`;b.append(distance);
+   b.onclick=()=>{select(s.id);results.replaceChildren();search.value=s.name;};results.append(b);}
+  if(!found.length){const p=document.createElement('p');p.textContent='No matching star in this spreadsheet.';results.append(p);}
+ };
+ search.onkeydown=event=>{if(event.key==='Enter'){const b=results.querySelector('button');if(b)b.click();}if(event.key==='Escape'){results.replaceChildren();search.value='';}};
+ details(sun);window.addEventListener('star-map-ready',initialize);initialize();
+})();
+</script>
+</body>
+</html>
