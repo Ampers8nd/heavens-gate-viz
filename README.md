@@ -31,6 +31,6 @@ creates editable Excel and CSV outputs. Details are in [data/README.md](data/REA
 
 ## Limitations and AI disclosure
 
-OpenAI Codex generated a large portion of this repository's code. Catalog names can
+OpenAI Codex (w/ Astra & 5.6 Sol) generated a large portion of this repository's code. Catalog names can
 differ between HYG and the NASA Exoplanet Archive, so unresolved and ambiguous hosts
 remain in review tables rather than being guessed.
