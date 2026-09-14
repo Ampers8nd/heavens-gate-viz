@@ -33,9 +33,7 @@ The main workbook is
 - **Review**, **Host matches**, and **Measurements** retain uncertain identities
   and source detail for audit.
 
-Use semicolon-separated faction IDs in `faction_owners`. A star system can have
-several owners, while individual planets can have different owners. Keep stars in
-the same physical system on the same `system_id`. Existing campaign edits are
+Use semicolon-separated faction IDs in `faction_owners`. Star systems and planets can have multiple owners. Keep stars in the same physical system on the same `system_id`. Existing campaign edits are
 preserved when the pipeline rewrites the same workbook.
 
 The coordinates use HYG's heliocentric J2000 equatorial frame: +X points to RA 0h,
