@@ -67,6 +67,33 @@ def apply_campaign(stars, planets, source=None):
                         row[field] = "\n".join(dict.fromkeys(filter(None, (row.get(field), value))))
                     else:
                         row[field] = value if value is not None else ""
+        # Logic to connect planet ownership from star ownership (single owner)
+        stars_by_hyg_id = {
+            key(star["hyg_id"]): star
+            for star in stars
+        }
+        sequence = 0
+        prev_host_id = ""
+        for planet in planets:
+            # Introduce a system to divide up the system into equal parts depending on how many owners there are
+            # Assumes that planets are added sequantially in terms of system (ie, 2 planets having the same host star wont be found on 2 
+            # different ends of the spreadsheet)
+            star = stars_by_hyg_id.get(key(planet["hyg_id"]))
+            owners = star["faction_owners"]
+            owners_list = owners.split(";")
+            if len(owners_list) <= 1:
+                planet["faction_owners"] = owners
+            else:
+                if (prev_host_id == star["hyg_id"]):
+                    # Previous planet was also in this system
+                    sequence += 1
+                    sequence = sequence % len(owners_list)
+                    planet["faction_owners"] = owners_list[sequence]
+                else:
+                    # previous planet was a different system
+                    sequence = 0
+                    planet["faction_owners"] = owners_list[sequence]
+            prev_host_id = star["hyg_id"]
         return rows(wb["Factions"]) if "Factions" in wb else []
     finally:
         wb.close()

@@ -1,4 +1,4 @@
 ﻿faction_id,faction_name,color,notes
-test_one,red,FF0000,
-test_two,blue,3127F5,
-test_three,green,27F54D,
+test_one,red,#FF0000,
+test_two,blue,#3127F5,
+test_three,green,#27F54D,
