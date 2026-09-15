@@ -67,6 +67,26 @@ def apply_campaign(stars, planets, source=None):
                         row[field] = "\n".join(dict.fromkeys(filter(None, (row.get(field), value))))
                     else:
                         row[field] = value if value is not None else ""
+        # Keep workbook-only campaign planets when their host remains selected.
+        def planet_identity(row):
+            return key(row.get("hyg_id")), str(row.get("planet_name") or "").strip()
+        valid_hosts = {key(star["hyg_id"]) for star in stars}
+        current_planets = {planet_identity(planet) for planet in planets}
+        current_names = {identity[1] for identity in current_planets}
+        for old in rows(wb["Planets"]):
+            identity = planet_identity(old)
+            host_id, name = identity
+            if identity in current_planets or host_id not in valid_hosts or not name:
+                continue
+            if name in current_names:
+                raise ValueError(f"Campaign planet name conflicts with another host: {name}")
+            for field in ("faction_owners", "include_in_count", "notes"):
+                value = old.get(field)
+                if isinstance(value, str) and value.startswith("="):
+                    raise ValueError(f"Campaign field Planets.{field} must contain a literal value")
+            planets.append(dict(old))
+            current_planets.add(identity)
+            current_names.add(name)
         # Logic to connect planet ownership from star ownership (single owner)
         stars_by_hyg_id = {
             key(star["hyg_id"]): star

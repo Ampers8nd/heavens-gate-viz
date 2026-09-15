@@ -44,6 +44,8 @@ Ownership is stored in the workbook rather than the web app:
 
 Enter multiple faction IDs as a semicolon-separated list. Save the workbook and
 refresh the browser map, or load the edited copy with **Open workbook**.
+Campaign planets added to the **Planets** sheet survive pipeline regeneration while
+their HYG host remains in the selected star volume.
 
 ## Checks
 

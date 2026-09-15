@@ -27,14 +27,21 @@ The main workbook is
 
 - **Stars** contains one row per HYG entry, planet counts, faction ownership, and
   Sol-centered `x_ly`, `y_ly`, `z_ly` coordinates.
-- **Planets** contains matched confirmed planets, orbital size and period,
-  eccentricity, flux, temperature, radius, mass, and editable planet owners.
+- **Planets** contains matched confirmed planets and preserved campaign planets,
+  orbital properties, habitability-related measurements, and editable owners.
 - **Factions** defines reusable faction IDs, names, colors, and notes.
 - **Review**, **Host matches**, and **Measurements** retain uncertain identities
   and source detail for audit.
 
-Use semicolon-separated faction IDs in `faction_owners`. Star systems and planets can have multiple owners. Keep stars in the same physical system on the same `system_id`. Existing campaign edits are
-preserved when the pipeline rewrites the same workbook.
+Use semicolon-separated faction IDs in `faction_owners`. Star systems and planets
+can have multiple owners. Keep stars in the same physical system on the same
+`system_id`. Existing campaign edits are preserved when the pipeline rewrites the
+same workbook.
+
+Planets added directly to the workbook are preserved during regeneration while
+their `hyg_id` still belongs to a selected star. Give each added planet a unique
+`planet_name`, a valid host `hyg_id`, and `include_in_count=1` if it should count.
+Delete its row from the campaign source workbook before regenerating to remove it.
 
 The coordinates use HYG's heliocentric J2000 equatorial frame: +X points to RA 0h,
 +Y to RA 6h, and +Z to the north celestial pole. Sol is `(0, 0, 0)`.

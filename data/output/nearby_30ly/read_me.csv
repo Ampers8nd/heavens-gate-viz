@@ -12,7 +12,7 @@ Measurements,"Planets uses one default NASA row per planet. If absent, latest ro
 Habitability,"Semi-major axis is orbital size, not instantaneous separation. Published flux and equilibrium temperature are indicators, not habitability verdicts; equilibrium temperature is not surface temperature. Mass may be M sin(i), indicated by mass_provenance. Blank means unavailable. See Measurements for uncertainty and limit flags."
 Luminosity,"HYG luminosity is supplied as-is; no bolometric correction or habitable-zone calculation is attempted. Age, atmosphere, rotation and activity are not reliably available in this export."
 Limits,"NASA parameter lim: 0 = measured value, 1 = upper limit, -1 = lower limit. Nonzero limits are called out in Planets notes; err1/err2 are upper/lower uncertainties in Measurements."
-Regeneration,"Campaign fields, notes, count overrides and planet inclusion flags are preserved from the existing workbook or --campaign-from. Other values are regenerated; save additional edits separately. planet_names is an archive snapshot. CSV files are independent snapshots."
+Regeneration,"Campaign fields, notes, count overrides, planet inclusion flags and manually added planet rows are preserved from the existing workbook or --campaign-from while their host HYG row remains selected. Other values are regenerated. planet_names is an archive snapshot. CSV files are independent snapshots."
 HYG source,"David Nash, HYG database, CC BY-SA 4.0: https://www.astronexus.com/projects/hyg ; field documentation: https://github.com/astronexus/HYG-Database/blob/main/hyg/README.md"
 NASA source,NASA Exoplanet Archive (NASA Exoplanet Science Institute / Caltech): https://exoplanetarchive.ipac.caltech.edu/docs/API_PS_columns.html
 Naming source,https://iauarchive.eso.org/public/themes/naming_exoplanets/
@@ -30,6 +30,7 @@ unique_archive_planets,6366
 selected_hyg_entries,270
 matched_exoplanet_hosts,51
 matched_confirmed_exoplanets,101
+preserved_campaign_planets,0
 review_rows,6
 include_sol,True
 review_arcsec,180

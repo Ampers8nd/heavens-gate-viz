@@ -403,6 +403,8 @@ def main(argv=None):
         alias_path = None if args.no_aliases else args.aliases
         matches, audit = match_hosts(stars, chosen, args.radius_ly, alias_path, args.review_arcsec, args.exclude_sol)
         summaries, planets, measurements = make_tables(stars, chosen, grouped, matches, args.radius_ly, args.exclude_sol)
+        archive_planet_count = len(planets)
+        archive_host_count = len({planet["hyg_id"] for planet in planets})
         output = args.output_dir or ROOT / "output" / f"nearby_{args.radius_ly:g}ly"
         existing = output / "nearby_stars.xlsx"
         campaign_source = args.campaign_from or (existing if existing.exists() else None)
@@ -431,8 +433,9 @@ def main(argv=None):
             "aliases_file": metadata_filename(alias_path),
             "aliases_sha256": hashlib.sha256(alias_path.read_bytes()).hexdigest() if alias_path else None,
             "input_hyg_entries": len(stars), "input_nasa_rows": len(raw), "unique_archive_planets": len(chosen),
-            "selected_hyg_entries": len(summaries), "matched_exoplanet_hosts": len({p['hyg_id'] for p in planets}),
-            "matched_confirmed_exoplanets": len(planets), "review_rows": len(review),
+            "selected_hyg_entries": len(summaries), "matched_exoplanet_hosts": archive_host_count,
+            "matched_confirmed_exoplanets": archive_planet_count,
+            "preserved_campaign_planets": len(planets) - archive_planet_count, "review_rows": len(review),
             "include_sol": not args.exclude_sol, "review_arcsec": args.review_arcsec,
             "coordinate_frame": "Sol-centered J2000 equatorial; +X vernal equinox, +Y RA 6h, +Z north celestial pole",
             "campaign_source": metadata_filename(campaign_source),
@@ -451,7 +454,7 @@ def main(argv=None):
             ("Habitability", "Semi-major axis is orbital size, not instantaneous separation. Published flux and equilibrium temperature are indicators, not habitability verdicts; equilibrium temperature is not surface temperature. Mass may be M sin(i), indicated by mass_provenance. Blank means unavailable. See Measurements for uncertainty and limit flags."),
             ("Luminosity", "HYG luminosity is supplied as-is; no bolometric correction or habitable-zone calculation is attempted. Age, atmosphere, rotation and activity are not reliably available in this export."),
             ("Limits", "NASA parameter lim: 0 = measured value, 1 = upper limit, -1 = lower limit. Nonzero limits are called out in Planets notes; err1/err2 are upper/lower uncertainties in Measurements."),
-            ("Regeneration", "Campaign fields, notes, count overrides and planet inclusion flags are preserved from the existing workbook or --campaign-from. Other values are regenerated; save additional edits separately. planet_names is an archive snapshot. CSV files are independent snapshots."),
+            ("Regeneration", "Campaign fields, notes, count overrides, planet inclusion flags and manually added planet rows are preserved from the existing workbook or --campaign-from while their host HYG row remains selected. Other values are regenerated. planet_names is an archive snapshot. CSV files are independent snapshots."),
             ("HYG source", "David Nash, HYG database, CC BY-SA 4.0: https://www.astronexus.com/projects/hyg ; field documentation: https://github.com/astronexus/HYG-Database/blob/main/hyg/README.md"),
             ("NASA source", "NASA Exoplanet Archive (NASA Exoplanet Science Institute / Caltech): https://exoplanetarchive.ipac.caltech.edu/docs/API_PS_columns.html"),
             ("Naming source", "https://iauarchive.eso.org/public/themes/naming_exoplanets/"),
@@ -477,7 +480,8 @@ def main(argv=None):
             write_csv(output / f"{title.lower().replace(' ', '_')}.csv", rows, columns)
         (output / "summary.json").write_text(json.dumps(metadata, indent=2) + "\n")
         print(f"{len(summaries)} HYG entries; {metadata['matched_exoplanet_hosts']} exoplanet hosts; "
-              f"{len(planets)} confirmed exoplanets; {len(review)} review rows.")
+              f"{archive_planet_count} confirmed exoplanets; {metadata['preserved_campaign_planets']} campaign planets; "
+              f"{len(review)} review rows.")
         print(f"Output: {output.resolve()}")
         return 0
     except (ValueError, OSError, csv.Error) as exc:

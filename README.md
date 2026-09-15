@@ -77,9 +77,10 @@ the 30-light-year catalog:
 
 Change `--radius-ly` to produce another local volume. Existing faction ownership,
 system IDs, notes, count overrides, and planet inclusion choices are preserved when
-the destination workbook already exists. Other generated scientific fields are
-recreated from the source catalogs. See [data/README.md](data/README.md) for the
-workbook schema and matching details.
+the destination workbook already exists. Manually added campaign planets are also
+retained while their host star remains selected. Other generated scientific fields
+are recreated from the source catalogs. See [data/README.md](data/README.md) for
+the workbook schema and matching details.
 
 Generated public metadata records source filenames and hashes without local
 directory paths. Per-run `summary.json` files and automatic pre-migration workbook
