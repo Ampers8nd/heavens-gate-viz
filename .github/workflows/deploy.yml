@@ -18,13 +18,15 @@ jobs:
           node-version: '20'
 
       - name: Install Dependencies
-        run: cd game-visual && npm install
+        working-directory: ./game-visual
+        run: npm install
 
       - name: Build Project
+        working-directory: ./game-visual
         run: cd game-visual && npm run build
 
       - name: Deploy to gh-pages Branch
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./dist
+          publish_dir: ./game-visual/dist
