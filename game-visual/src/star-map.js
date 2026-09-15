@@ -88,7 +88,7 @@ export class StarMap {
 
   filter(predicate) {
     this.predicate = predicate;
-    this.visible = this.catalog.stars.filter(s => s.sol || s.id === this.selected || predicate(s));
+    this.visible = this.catalog.stars.filter(s => s.sol || predicate(s));
     const colors = [], positions = [];
     for (const s of this.visible) {
       positions.push(...s.xyz);

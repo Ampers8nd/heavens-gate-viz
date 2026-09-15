@@ -1,4 +1,6 @@
 import { buildPlanarLayout, planarPalette, planarPosition, planarStarColor } from './planar-export.js';
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 const IMAGE_SIZE = 4096;
 
@@ -56,6 +58,7 @@ export class PlanarMap {
 
     this.canvas.addEventListener('pointerdown', event => {
       if (event.button !== 0) return;
+      this.animation = null;
       this.hover.textContent = '';
       this.drag = { id: event.pointerId, x: event.clientX, y: event.clientY,
         panX: this.panX, panY: this.panY, moved: false };
@@ -108,6 +111,7 @@ export class PlanarMap {
     viewport.addEventListener('keydown', event => {
       if (!this.active || !['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) return;
       event.preventDefault();
+      this.animation = null;
       const step = Math.min(this.width, this.height) / 12;
       this.panX += event.key === 'ArrowLeft' ? step : event.key === 'ArrowRight' ? -step : 0;
       this.panY += event.key === 'ArrowUp' ? step : event.key === 'ArrowDown' ? -step : 0;
@@ -122,6 +126,7 @@ export class PlanarMap {
   }
 
   setCatalog(catalog) {
+    this.animation = null;
     this.catalog = catalog;
     this.selected = catalog.stars.find(star => star.sol)?.id ?? null;
     this.zoomLevel = 1; this.panX = this.panY = 0;
@@ -131,11 +136,12 @@ export class PlanarMap {
 
   filter(predicate) {
     this.predicate = predicate;
-    this.visible = this.catalog.stars.filter(star => star.sol || star.id === this.selected || predicate(star));
+    this.visible = this.catalog.stars.filter(star => star.sol || predicate(star));
     this.dirty = true; this.requestRender();
   }
 
   select(id) {
+    if (id !== this.selected) this.animation = null;
     this.selected = id; this.filter(this.predicate);
   }
 
@@ -267,6 +273,7 @@ export class PlanarMap {
 
   zoom(factor, anchorX = this.width / 2, anchorY = this.height / 2) {
     if (!this.width) return;
+    this.animation = null;
     const before = chartTransform(this.width, this.height, this.zoomLevel, this.panX, this.panY);
     const chartPoint = screenToChart(anchorX, anchorY, before);
     this.zoomLevel = Math.max(1, Math.min(24, this.zoomLevel / factor));
@@ -278,7 +285,23 @@ export class PlanarMap {
   }
 
   reset() {
-    this.zoomLevel = 1; this.panX = this.panY = 0; this.dirty = true; this.requestRender();
+    // this.zoomLevel = 1; this.panX = this.panY = 0; this.dirty = true; this.requestRender();
+    const oldZoom = this.zoomLevel;
+    const oldPanX = this.panX;
+    const oldPanY = this.panY;
+    const token = {}; this.animation = token;
+    const start = performance.now();
+    const step = time => {
+      if (this.animation !== token) return;
+      console.log("resetting")
+      const t = Math.min(1, (time - start) / 450), eased = 1 - (1 - t) ** 3;
+      this.zoomLevel = oldZoom + (1 - oldZoom)*eased;
+      this.panX = oldPanX + (0 - oldPanX)*eased
+      this.panY = oldPanY + (0 - oldPanY)*eased
+      this.dirty = true;
+      this.requestRender();
+      if (t < 1) requestAnimationFrame(step); else this.animation = null;
+    }; requestAnimationFrame(step);
     if (this.catalog) this.onFocus(this.catalog.stars.find(star => star.sol).id);
   }
 
@@ -287,13 +310,27 @@ export class PlanarMap {
     this.zoomLevel = Math.max(this.zoomLevel, 3);
     this.dirty = true;
     this.ensureLayout();
-    const point = this.layout.points.find(item => item.star.id === id);
-    if (!point) return;
+    const point = this.layout.points.find(item => item.star.id === id) ??
+      planarPosition(this.catalog.byId.get(id), Math.max(10, Math.ceil(this.catalog.radius / 10) * 10), IMAGE_SIZE, 300);
     const transform = chartTransform(this.width, this.height, this.zoomLevel);
-    this.panX = this.width / 2 - point.x * transform.scale - transform.x;
-    this.panY = this.height / 2 - point.y * transform.scale - transform.y;
+    const oldPanX = this.panX;
+    const oldPanY = this.panY;
+    const newPanX = this.width / 2 - point.x * transform.scale - transform.x;
+    const newPanY = this.height / 2 - point.y * transform.scale - transform.y;
+    // this.panX = this.width / 2 - point.x * transform.scale - transform.x;
+    // this.panY = this.height / 2 - point.y * transform.scale - transform.y;
+    const token = {}; this.animation = token;
+    const start = performance.now();
+    const step = time => {
+      if (this.animation !== token) return;
+      console.log("moving")
+      const t = Math.min(1, (time - start) / 450), eased = 1 - (1 - t) ** 3;
+      this.panX = oldPanX + (newPanX - oldPanX)*eased
+      this.panY = oldPanY + (newPanY - oldPanY)*eased
+      this.requestRender();
+      if (t < 1) requestAnimationFrame(step); else this.animation = null;
+    }; requestAnimationFrame(step);
     this.dirty = true;
-    this.requestRender();
     this.onFocus(id);
   }
 }
