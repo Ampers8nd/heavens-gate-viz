@@ -15,7 +15,7 @@ export function imageFilename(radius) {
   return `heavens-gate-${Math.ceil(radius)}ly-xy-${stamp}.png`;
 }
 
-function palette(theme) {
+export function planarPalette(theme) {
   return theme === 'light' ? {
     background: '#f4eedf', panel: '#e8deca', ink: '#302a25', muted: '#796b5c',
     grid: '#c7baa4', accent: '#772e32', host: '#9b432a', star: '#625b50', sol: '#bd6b2d'
@@ -25,7 +25,7 @@ function palette(theme) {
   };
 }
 
-function starColor(catalog, star, colors) {
+export function planarStarColor(catalog, star, colors) {
   const faction = catalog.factions.get(star.owners[0] ?? star.planetOwners[0]);
   return star.sol ? colors.sol : faction?.color ?? (star.count ? colors.host : colors.star);
 }
@@ -82,8 +82,32 @@ export function placeAllLabels(items, bounds, reserved = []) {
   return result;
 }
 
+export function buildPlanarLayout(catalog, stars, selectedId, ctx, minimumGap = 24) {
+  const size = 4096, margin = 300;
+  const radius = Math.max(10, Math.ceil(catalog.radius / 10) * 10);
+  const plotBounds = { left: 90, top: 155, right: size - 90, bottom: size - 155 };
+  const rawProjected = stars.map(star => ({ star, ...planarPosition(star, radius, size, margin) }))
+    .sort((a, b) => Number(b.star.sol) - Number(a.star.sol) || a.star.distance - b.star.distance || a.star.id.localeCompare(b.star.id));
+  const points = separateAlignedStars(rawProjected, plotBounds, minimumGap);
+  const labelOrder = points.slice().sort((a, b) => {
+    const rank = p => p.star.sol || p.star.id === selectedId ? 0 : p.star.count ? 1 : 2;
+    return rank(a) - rank(b) || a.star.distance - b.star.distance;
+  });
+  const labelItems = labelOrder.map(point => {
+    const important = point.star.sol || point.star.id === selectedId;
+    ctx.font = `${important ? '700 24px' : '17px'} ui-monospace, SFMono-Regular, Menlo, monospace`;
+    return { id: point.star.id, point, text: point.star.name, important, x: point.x, y: point.y,
+      width: Math.ceil(ctx.measureText(point.star.name).width) + 16, height: important ? 34 : 27 };
+  });
+  const pointSpace = Math.max(18, minimumGap * .8);
+  const pointBoxes = points.map(point => ({ x: point.x - pointSpace / 2, y: point.y - pointSpace / 2,
+    width: pointSpace, height: pointSpace }));
+  const labels = placeAllLabels(labelItems, plotBounds, pointBoxes);
+  return { points, labels };
+}
+
 export function drawPlanarMap(canvas, catalog, stars, selectedId, theme = 'dark') {
-  const size = 4096, margin = 300, colors = palette(theme);
+  const size = 4096, margin = 300, colors = planarPalette(theme);
   canvas.width = size; canvas.height = size;
   const ctx = canvas.getContext('2d');
   if (!ctx) throw new Error('This browser cannot create the map image.');
@@ -106,10 +130,8 @@ export function drawPlanarMap(canvas, catalog, stars, selectedId, theme = 'dark'
   ctx.fillStyle = colors.muted; ctx.font = '18px ui-monospace, SFMono-Regular, Menlo, monospace';
   ctx.fillText('+X · VERNAL EQUINOX', size - margin - 220, center - 18); ctx.fillText('+Y · RA 6H', center + 18, margin + 22);
 
-  const plotBounds = { left: 90, top: 155, right: size - 90, bottom: size - 155 };
-  const rawProjected = stars.map(star => ({ star, ...planarPosition(star, radius, size, margin) }))
-    .sort((a, b) => Number(b.star.sol) - Number(a.star.sol) || a.star.distance - b.star.distance || a.star.id.localeCompare(b.star.id));
-  const projected = separateAlignedStars(rawProjected, plotBounds);
+  const layout = buildPlanarLayout(catalog, stars, selectedId, ctx);
+  const projected = layout.points;
   ctx.save(); ctx.setLineDash([7, 7]); ctx.strokeStyle = colors.muted; ctx.globalAlpha = .55; ctx.lineWidth = 1.5;
   for (const point of projected.filter(point => point.moved)) {
     ctx.beginPath(); ctx.moveTo(point.trueX, point.trueY); ctx.lineTo(point.x, point.y); ctx.stroke();
@@ -125,24 +147,13 @@ export function drawPlanarMap(canvas, catalog, stars, selectedId, theme = 'dark'
         ctx.beginPath(); ctx.arc(x, y, star.sol ? 17 : 10, i * TAU / owners.length - Math.PI / 2, (i + 1) * TAU / owners.length - Math.PI / 2); ctx.stroke();
       });
     }
-    ctx.fillStyle = starColor(catalog, star, colors);
+    ctx.fillStyle = planarStarColor(catalog, star, colors);
     ctx.beginPath(); ctx.arc(x, y, star.sol ? 11 : star.count ? 5.5 : 3.5, 0, TAU); ctx.fill();
     if (star.id === selectedId && !star.sol) {
       ctx.strokeStyle = colors.accent; ctx.lineWidth = 3; ctx.strokeRect(x - 13, y - 13, 26, 26);
     }
   }
-  const labelOrder = projected.slice().sort((a, b) => {
-    const rank = p => p.star.sol || p.star.id === selectedId ? 0 : p.star.count ? 1 : 2;
-    return rank(a) - rank(b) || a.star.distance - b.star.distance;
-  });
-  const labelItems = labelOrder.map(point => {
-    const important = point.star.sol || point.star.id === selectedId;
-    ctx.font = `${important ? '700 24px' : '17px'} ui-monospace, SFMono-Regular, Menlo, monospace`;
-    return { id: point.star.id, point, text: point.star.name, important, x: point.x, y: point.y,
-      width: Math.ceil(ctx.measureText(point.star.name).width) + 16, height: important ? 34 : 27 };
-  });
-  const pointBoxes = projected.map(point => ({ x: point.x - 9, y: point.y - 9, width: 18, height: 18 }));
-  const labels = placeAllLabels(labelItems, plotBounds, pointBoxes);
+  const labels = layout.labels;
   ctx.save(); ctx.strokeStyle = colors.grid; ctx.lineWidth = 1.2; ctx.globalAlpha = .8;
   for (const box of labels) {
     const anchorX = Math.max(box.x, Math.min(box.point.x, box.x + box.width));
@@ -156,6 +167,7 @@ export function drawPlanarMap(canvas, catalog, stars, selectedId, theme = 'dark'
     ctx.font = `${box.important ? '700 24px' : '17px'} ui-monospace, SFMono-Regular, Menlo, monospace`;
     ctx.fillText(box.text, box.x + 8, box.y + (box.important ? 25 : 20));
   }
+  canvas.planarLayout = layout;
   ctx.fillStyle = colors.panel; ctx.fillRect(48, size - 120, size - 96, 72);
   ctx.fillStyle = colors.muted; ctx.font = '17px ui-monospace, SFMono-Regular, Menlo, monospace';
   ctx.fillText('ALL FILTERED STARS ARE NAMED. ALIGNED POINTS AND LABELS ARE DISPLACED WITH LEADER LINES. LARGER POINTS HAVE COUNTED PLANETS.', 72, size - 78);

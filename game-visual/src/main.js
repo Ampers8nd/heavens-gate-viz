@@ -1,13 +1,51 @@
 import './style.css';
 import { readWorkbook } from './catalog.js';
 import { StarMap } from './star-map.js';
+import { PlanarMap } from './planar-map.js';
 import { downloadPlanarMap } from './planar-export.js';
 
 const $ = selector => document.querySelector(selector);
 const el = (tag, text, className) => { const node = document.createElement(tag); if (text !== undefined) node.textContent = text; if (className) node.className = className; return node; };
 const fmt = (value, unit = '') => value === null || value === undefined || value === '' ? 'Not provided' : `${Number.isFinite(Number(value)) ? Number(value).toLocaleString(undefined, { maximumFractionDigits: 4 }) : String(value)}${unit ? ` ${unit}` : ''}`;
-let catalog, selectedId, selectedPlanet = null, sourceUrl = null, loadVersion = 0, map;
+let catalog, selectedId, selectedPlanet = null, sourceUrl = null, loadVersion = 0, map, planarMap;
 let theme = 'dark';
+let view = '3d';
+let focusedStarId = null;
+const activeMap = () => view === '2d' ? planarMap : map;
+
+function rememberFocus(id) {
+  if (catalog?.byId.has(String(id))) focusedStarId = String(id);
+}
+
+function setView(next) {
+  view = next === '2d' ? '2d' : '3d';
+  $('#viewport').dataset.view = view;
+  planarMap.setActive(view === '2d');
+  const button = $('#view-toggle');
+  button.textContent = view === '2d' ? '3D view' : '2D view';
+  button.setAttribute('aria-label', view === '2d' ? 'Switch to 3D view' : 'Switch to 2D view');
+  button.setAttribute('aria-pressed', String(view === '2d'));
+  $('#viewport').setAttribute('aria-label', view === '2d' ?
+    '2D planar star map. Drag to pan, scroll to zoom, click a star to select. Arrow keys pan.' :
+    '3D star map. Drag to orbit, right-drag to pan, scroll to zoom. Arrow keys pan.');
+  $('#map-gesture').textContent = view === '2d' ? 'DRAG: PAN / SCROLL: ZOOM / CLICK: SELECT' :
+    'DRAG: ORBIT / RIGHT-DRAG: PAN / SCROLL: ZOOM';
+  $('#map-scale').textContent = view === '2d' ? 'X/Y projection · Z omitted' : 'J2000 · Light-years';
+  if (catalog && focusedStarId) activeMap().focus(focusedStarId, false);
+}
+
+function renderLegend() {
+  const items = $('#legend-items'); items.replaceChildren();
+  for (const faction of catalog.factions.values()) {
+    const row = el('div', undefined, 'legend-entry');
+    const swatch = el('i'); swatch.style.backgroundColor = faction.color;
+    row.append(swatch, el('span', faction.name)); row.title = faction.id;
+    items.append(row);
+  }
+  const unclaimed = el('div', undefined, 'legend-entry');
+  unclaimed.append(el('i', undefined, 'legend-neutral'), el('span', 'No recorded owner'));
+  items.append(unclaimed);
+}
 
 function setTheme(next, persist = true) {
   theme = next === 'light' ? 'light' : 'dark';
@@ -18,6 +56,7 @@ function setTheme(next, persist = true) {
   button.setAttribute('aria-pressed', String(theme === 'light'));
   if (persist) localStorage.setItem('heavens-gate-theme', theme);
   map?.setTheme(theme);
+  planarMap?.setTheme(theme);
 }
 
 function facts(items) {
@@ -63,7 +102,7 @@ function showPlanet(planet) {
 function selectStar(id, focus = false) {
   if (!catalog?.byId.has(String(id))) return;
   const star = catalog.byId.get(String(id)); selectedId = star.id; selectedPlanet = null;
-  map.select(star.id); if (focus) map.focus(star.id);
+  map.select(star.id); planarMap.select(star.id); if (focus) activeMap().focus(star.id);
   const details = $('#details'); details.replaceChildren();
   $('#entry-id').textContent = `HYG ${star.id}`;
   details.append(el('h2', star.name), el('p', [...new Set(star.aliases)].join(' / '), 'aliases'));
@@ -89,17 +128,18 @@ function selectStar(id, focus = false) {
     details.append(list); const panel = el('div', undefined, 'planet-detail'); panel.id = 'planet-detail'; details.append(panel);
     showPlanet(star.planets.find(p => p.included) ?? star.planets[0]);
   }
-  const focusButton = el('button', 'Center this system on the chart ↗', 'detail-action'); focusButton.onclick = () => map.focus(star.id); details.append(focusButton);
+  const focusButton = el('button', 'Center this system on the chart ↗', 'detail-action'); focusButton.onclick = () => activeMap().focus(star.id); details.append(focusButton);
 }
 function filter() {
   if (!catalog) return;
   const id = $('#faction-filter').value, hostOnly = $('#hosts-only').checked;
-  map.filter(s => (!id || (id === '__unassigned' ? !s.owners.length && !s.planetOwners.length : s.owners.includes(id) || s.planetOwners.includes(id))) && (!hostOnly || s.count > 0));
+  const predicate = s => (!id || (id === '__unassigned' ? !s.owners.length && !s.planetOwners.length : s.owners.includes(id) || s.planetOwners.includes(id))) && (!hostOnly || s.count > 0);
+  map.filter(predicate); planarMap.filter(predicate);
 }
 async function load(file, name, version) {
   const next = await readWorkbook(file);
   if (version !== loadVersion) return;
-  catalog = next; map.setCatalog(catalog);
+  catalog = next; map.setCatalog(catalog); planarMap.setCatalog(catalog); renderLegend();
   $('#faction-filter').replaceChildren(new Option('All territories', ''), new Option('No recorded owners', '__unassigned'));
   for (const f of catalog.factions.values()) $('#faction-filter').append(new Option(f.name, f.id));
   $('#hosts-only').checked = false; $('#search').value = ''; $('#search-results').replaceChildren();
@@ -108,7 +148,8 @@ async function load(file, name, version) {
   $('#map-message').textContent = catalog.warnings.length ? catalog.warnings.join(' ') : '';
   if (sourceUrl) URL.revokeObjectURL(sourceUrl);
   sourceUrl = URL.createObjectURL(file); $('#download').href = sourceUrl; $('#download').download = name;
-  selectStar(catalog.stars.find(s => s.sol).id);
+  focusedStarId = catalog.stars.find(s => s.sol).id;
+  selectStar(focusedStarId);
   document.body.dataset.ready = 'true';
 }
 async function openSource(file) {
@@ -127,14 +168,17 @@ async function openSource(file) {
 
 $('#about').onclick = () => $('#help').showModal();
 try {
-  map = new StarMap($('#viewport'), id => selectStar(id));
+  map = new StarMap($('#viewport'), id => selectStar(id), rememberFocus);
+  planarMap = new PlanarMap($('#viewport'), id => selectStar(id), rememberFocus);
   setTheme(localStorage.getItem('heavens-gate-theme') || 'dark', false);
+  setView('3d');
   $('#theme-toggle').onclick = () => setTheme(theme === 'dark' ? 'light' : 'dark');
+  $('#view-toggle').onclick = () => setView(view === '3d' ? '2d' : '3d');
   $('#reload').onclick = () => openSource();
   $('#workbook').onchange = event => { const file = event.target.files[0]; if (file) openSource(file); event.target.value = ''; };
   $('#faction-filter').onchange = filter; $('#hosts-only').onchange = filter;
-  $('#zoom-in').onclick = () => map.zoom(.8); $('#zoom-out').onclick = () => map.zoom(1.25);
-  $('#reset').onclick = () => catalog && map.reset(); $('#focus').onclick = () => selectedId && map.focus(selectedId);
+  $('#zoom-in').onclick = () => activeMap().zoom(.8); $('#zoom-out').onclick = () => activeMap().zoom(1.25);
+  $('#reset').onclick = () => catalog && activeMap().reset(); $('#focus').onclick = () => selectedId && activeMap().focus(selectedId);
   $('#export-2d').onclick = async event => {
     if (!catalog) return;
     const button = event.currentTarget, original = button.textContent; button.disabled = true; button.textContent = 'Drawing PNG…';
@@ -146,6 +190,7 @@ try {
     } finally { button.disabled = false; button.textContent = original; }
   };
   $('#sol-beacon').onclick = () => { if (catalog) { selectStar(catalog.stars.find(s => s.sol).id); map.reset(); } };
+  $('#planar-sol').onclick = () => { if (catalog) { selectStar(catalog.stars.find(s => s.sol).id); planarMap.reset(); } };
   $('#search').oninput = () => {
     const results = $('#search-results'); results.replaceChildren();
     const query = $('#search').value.trim().toLowerCase(); if (!query || !catalog) return;

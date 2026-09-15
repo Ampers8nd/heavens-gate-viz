@@ -25,6 +25,16 @@ another compatible `.xlsx` file without uploading it anywhere.
 
 - Left-drag to orbit, right-drag or the arrow keys to pan, and scroll or pinch to
   zoom. Click a star or use search to open its system and planet details.
+- **2D view** flattens the live star coordinates onto the X/Y plane and separates
+  markers that align on screen. It renders stars and labels directly; the PNG is
+  created only when you choose **Export 2D**. Drag to pan, scroll to zoom, hover
+  for a readable name, and click a point or its name to select it. **3D view**
+  returns to the spatial map; search, filters, selection, and the dossier are shared.
+  At overview zoom, fewer names and guide lines are shown; they return as you zoom in.
+  Switching views keeps the last centered star at the center of the new view.
+- The **Faction legend** shows every faction name and color from the workbook,
+  plus a neutral marker for systems with no recorded owner. Collapse it for more
+  chart space.
 - The map starts in dark space mode. **Light mode** and **Dark mode** switch the
   interface and remember the choice in that browser.
 - Filters can show planet hosts, unclaimed systems, or individual factions.

@@ -37,8 +37,8 @@ using the map. Stop the server with **Ctrl+C**.
 
 The map reads
 [`data/output/nearby_30ly/nearby_stars.xlsx`](data/output/nearby_30ly/nearby_stars.xlsx),
-starts in dark mode, and supports search, selection, faction filters, orbit and pan
-controls, and a labeled 2D PNG export. See
+starts in dark mode, and supports search, selection, faction filters, a live 2D/3D
+view switch, a faction legend, and a labeled 2D PNG export. See
 [game-visual/README.md](game-visual/README.md) for all controls.
 
 To preview a production build locally:

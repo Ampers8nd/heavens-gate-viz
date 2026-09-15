@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { imageFilename, planarPosition, placeAllLabels, separateAlignedStars } from '../src/planar-export.js';
+import { chartTransform, planarDetailForZoom, planarLabelsForZoom, screenToChart } from '../src/planar-map.js';
 
 const overlap = (a, b) => a.x < b.x + b.width && a.x + a.width > b.x && a.y < b.y + b.height && a.y + a.height > b.y;
 
@@ -31,4 +32,28 @@ test('every name receives a nonoverlapping label inside the image', () => {
 
 test('PNG filename describes the planar projection', () => {
   assert.match(imageFilename(29.4), /^heavens-gate-30ly-xy-\d{4}-\d{2}-\d{2}\.png$/);
+});
+
+test('2D screen coordinates invert the displayed planar chart transform', () => {
+  const transform = chartTransform(1200, 800, 3, -140, 65);
+  const x = transform.x + 1800 * transform.scale;
+  const y = transform.y + 2500 * transform.scale;
+  const point = screenToChart(x, y, transform);
+  assert.ok(Math.abs(point.x - 1800) < 1e-9);
+  assert.ok(Math.abs(point.y - 2500) < 1e-9);
+});
+
+test('2D overview hides connectors and keeps selected and hovered names', () => {
+  const labels = Array.from({ length: 30 }, (_, i) => ({ point: { star: {
+    id: String(i), sol: i === 0, count: i < 20 ? 1 : 0,
+    owners: [], planetOwners: []
+  } } }));
+  assert.deepEqual(planarDetailForZoom(1), { labels: 'overview', displacement: 'none', leaders: false });
+  assert.equal(planarDetailForZoom(2).displacement, 'selected');
+  assert.equal(planarDetailForZoom(4).leaders, true);
+  const overview = planarLabelsForZoom(labels, '26', '27', 1);
+  assert.ok(overview.length <= 14);
+  assert.ok(overview.some(box => box.point.star.id === '26'));
+  assert.ok(overview.some(box => box.point.star.id === '27'));
+  assert.equal(planarLabelsForZoom(labels, '26', null, 4).length, labels.length);
 });

@@ -3,8 +3,8 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { thickness } from 'three/src/nodes/core/PropertyNode.js';
 
 export class StarMap {
-  constructor(viewport, onSelect) {
-    this.viewport = viewport; this.onSelect = onSelect;
+  constructor(viewport, onSelect, onFocus = () => {}) {
+    this.viewport = viewport; this.onSelect = onSelect; this.onFocus = onFocus;
     this.canvas = viewport.querySelector('canvas'); this.labels = viewport.querySelector('#labels');
     this.beacon = viewport.querySelector('#sol-beacon');
     this.scene = new THREE.Scene(); this.theme = 'dark'; this.scene.background = new THREE.Color('#050914');
@@ -29,7 +29,7 @@ export class StarMap {
       if (event.buttons) return;
       const nearest = this.pick(event);
       if (this.hovered !== nearest?.star.id) {this.hovered = nearest?.star.id ?? null}
-      if (this.hovered !== null) {this.focus(this.hovered)}
+      if (this.hovered !== null) { this.onSelect(this.hovered); this.focus(this.hovered); }
     })
     this.canvas.addEventListener('pointermove', event => {
       if (event.buttons) return;
@@ -46,7 +46,7 @@ export class StarMap {
       }
     });
     viewport.addEventListener('keydown', event => {
-      if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key) || !this.catalog) return;
+      if (viewport.dataset.view === '2d' || !['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key) || !this.catalog) return;
       event.preventDefault();
       const movement = new THREE.Vector3();
       const horizontal = event.key === 'ArrowLeft' ? -1 : event.key === 'ArrowRight' ? 1 : 0;
@@ -191,11 +191,13 @@ export class StarMap {
   reset(animated = true) {
     const r = this.catalog.radius;
     this.moveTo(new THREE.Vector3(), new THREE.Vector3(r * 1.6, r * 1.8, r * 1.25), animated);
+    this.onFocus(this.catalog.stars.find(star => star.sol).id);
   }
-  focus(id) {
+  focus(id, animated = true) {
     const target = new THREE.Vector3(...this.catalog.byId.get(id).xyz);
     const offset = this.camera.position.clone().sub(this.controls.target).normalize().multiplyScalar(this.catalog.radius * .75);
-    this.moveTo(target, target.clone().add(offset));
+    this.moveTo(target, target.clone().add(offset), animated);
+    this.onFocus(id);
   }
   zoom(factor) {
     this.animation = null;
