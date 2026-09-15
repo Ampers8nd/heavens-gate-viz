@@ -18,10 +18,10 @@ jobs:
           node-version: '20'
 
       - name: Install Dependencies
-        run: npm install
+        run: cd game-visual && npm install
 
       - name: Build Project
-        run: npm run build
+        run: cd game-visual && npm run build
 
       - name: Deploy to gh-pages Branch
         uses: peaceiris/actions-gh-pages@v3
